@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>station_1</key>
+	<dict>
+		<key>station_2</key>
+		<array>
+			<string>0x00</string>
+			<integer>20</integer>
+		</array>
+		<key>station_4</key>
+		<array>
+			<string>0x10</string>
+			<integer>40</integer>
+		</array>
+	</dict>
+	<key>station_2</key>
+	<dict>
+		<key>station_3</key>
+		<array>
+			<string>0x00</string>
+			<integer>20</integer>
+		</array>
+	</dict>
+	<key>station_3</key>
+	<dict>
+		<key>station_1</key>
+		<array>
+			<string>0x10</string>
+			<integer>40</integer>
+		</array>
+		<key>station_4</key>
+		<array>
+			<string>0x00</string>
+			<integer>20</integer>
+		</array>
+	</dict>
+	<key>station_4</key>
+	<dict>
+		<key>station_2</key>
+		<array>
+			<string>0x10</string>
+			<integer>40</integer>
+		</array>
+		<key>station_5</key>
+		<array>
+			<string>0x00</string>
+			<integer>20</integer>
+		</array>
+	</dict>
+	<key>station_5</key>
+	<dict>
+		<key>station_1</key>
+		<array>
+			<string>0x00</string>
+			<integer>20</integer>
+		</array>
+		<key>station_3</key>
+		<array>
+			<string>0x10</string>
+			<integer>40</integer>
+		</array>
+	</dict>
+</dict>
+</plist>
