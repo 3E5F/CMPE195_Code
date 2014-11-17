@@ -17,29 +17,9 @@ queue = Queue.Queue()
 #testing
 count = 0
 
-def derp():
-	print 'Hi'
-	mySource = ex.source
-	myDestination = ex.destination
-	print "Main Source - " + mySource
-	print "Main Destination - " + mySource
-
-#app = QtGui.QApplication(sys.argv)
-#ex = temp.MainWindow()
-#ex.pushed.connect(derp)
-#ex.setWindowTitle("Spartan Superway Ticket System")
-#ex.show()
-#sys.exit(app.exec_())
-
-
-
-
 if __name__ == "__main__":
 	try:
 		director = mainhub.Director()
-		#gui = temp.MainWindow()
-		#gui.main()
-		#temp.main()
 		
 
 		#while queue.empty():
@@ -68,6 +48,7 @@ if __name__ == "__main__":
 							elem.logger(directions)
 							break
 			#test
+			'''
 			count = count + 1
 			if count == 3:
 				queue.put(("station_1", "station_5"))
@@ -75,6 +56,23 @@ if __name__ == "__main__":
 				queue.put(("station_5", "station_1"))
 			elif count == 7:
 				queue.put(("stop_system", None))
+			'''
 
 	except Exception, error:
 		director.logger("ERROR IN SYSTEM: %s" % error)
+
+def derp():
+	# print 'Hi'
+	# mySource = ex.source
+	# myDestination = ex.destination
+	# print "Main Source - " + mySource
+	# print "Main Destination - " + mySource
+	queue.put((ex.source, ex.destination))
+	print "test"
+
+app = QtGui.QApplication(sys.argv)
+ex = temp.MainWindow()
+ex.pushed.connect(derp)
+ex.setWindowTitle("Spartan Superway Ticket System")
+ex.show()
+sys.exit(app.exec_())

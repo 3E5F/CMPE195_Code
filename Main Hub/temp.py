@@ -20,9 +20,6 @@ default_values = {}
 default_values['stop_system'] = "stop_system"
 default_values['insert_station'] = "insert_station"
 
-pod_list=[]
-queue = Queue.Queue()
-
 class MainWindow(QtGui.QWidget):
     pushed = QtCore.Signal()
 
@@ -30,19 +27,30 @@ class MainWindow(QtGui.QWidget):
 	super(MainWindow,self).__init__()
         self.source = None
         self.destination = None
+        self.queue = Queue.Queue()
         self.initUI()
 
     def initUI(self):
         self.source = None
         self.destination = None
+        self.queue = Queue.Queue()
         self.setUpFrame()
 
     def setUpFrame(self):
         #Main Window
+        #self.setGeometry(0,0,600,400)
         self.setObjectName("MainWindow")
         self.resize(600, 400)
         self.centralWidget = QtGui.QWidget(self)
         self.centralWidget.setObjectName("centralWidget")
+
+        #TEST
+        self.tab = QtGui.QTabWidget(self)
+        #self.tab.setGeometry(QtCore.QRect(30, 45, 540, 340))
+        self.tab.setGeometry(QtCore.QRect(30, 45, 200, 20))
+        self.tab_bar = QtGui.QTabBar(self.tab)
+        tab_1 = self.tab_bar.addTab("Scheduler")
+        tab_2 = self.tab_bar.addTab("Pod Information")
 
         #'Welcome to the Spartan Superway' Title
         self.title = QtGui.QLabel(self.centralWidget)
@@ -161,7 +169,9 @@ class MainWindow(QtGui.QWidget):
         self.destination_station_4.clicked.connect(self.destination4)
         self.destination_station_5.clicked.connect(self.destination5)
         self.destination_station_6.clicked.connect(self.destination6)
-        self.confirm.clicked.connect(self.confirmSignal)
+        self.cancel.clicked.connect(self.cancel_press)
+        #self.confirm.clicked.connect(self.confirmSignal)
+        self.confirm.clicked.connect(self.confirm_press)
         #QtCore.QMetaObject.connectSlotsByName(MainWindow)
     
     def confirmSignal(self):
@@ -259,7 +269,18 @@ class MainWindow(QtGui.QWidget):
         self.confirm.setText(QtGui.QApplication.translate("MainWindow", "Confirm", None, QtGui.QApplication.UnicodeUTF8))
         self.cancel.setText(QtGui.QApplication.translate("MainWindow", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
 
+    def cancel_press(self):
+        self.source = "Not selected"
+        self.destination = "Not selected"
+        self.update_source()
+        self.update_destination()
+        self.source = None
+        self.destination = None
 
+    def confirm_press(self):
+        # self.queue.put((self.source, self.destination))
+        # print self.queue.get()
+        self.pushed.emit()
 
 def main():
    app = QtGui.QApplication(sys.argv)
