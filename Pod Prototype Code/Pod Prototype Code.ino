@@ -5,14 +5,21 @@
 */
 
 #include <Wire.h>
+
 int incomingByte;      // a variable to read incoming serial data into
-int ID;
+int ID;   //ID of the pod - 1, 2, 3
+const int frontSensor = 7; // front sensor
+const int leftSensor = 5; // left sensor
+const int rightSensor = 3; // right sensor
+long front, left, right;  //used for output to serial - converted to inches
+
+
 
 enum DIRECTION{
   FORWARD = 'w',
-  LEFT = 'a',
-  RIGHT = 'd',
-  STOP = 's',
+  LEFT    = 'a',
+  RIGHT   = 'd',
+  STOP    = 's',
 };
 
 enum FRONTSPEED{
@@ -21,12 +28,16 @@ enum FRONTSPEED{
   HALT = 0x00,
 };
 
-const int frontSensor = 7; // front sensor
-const int leftSensor = 5; // left sensor
-const int rightSensor = 3; // right sensor
+enum MESSAGETYPE{
+  MainHub_Path_InitialPathMsg   = 0x0,
+  Pod_Path_ConfirmPathMsg       = 0x1,
+  MainHub_Path_GoPathMsg        = 0x2,
+  Pod_Path_ConfirmGoMsg         = 0x3,
+  MainHub_Status_RequestStatus  = 0x4,
+  Pod_Status_StatusInfo         = 0x5,
+};
 
-long pulseFront, pulseLeft, pulseRight;
-long front, left, right;  //used for output to serial - converted to inches
+
 
 
 
@@ -37,20 +48,29 @@ void setup()
   pinMode(frontSensor, INPUT);
   pinMode(leftSensor, INPUT);
   pinMode(rightSensor, INPUT);
+
+  FRONTSPEED front_speed;
+  DIRECTION direction;
+  MESSAGETYPE message_type;
 }
 
-FRONTSPEED front_speed;
-DIRECTION direction;
-
-void checkSensors(){
+void updateMotors(){
   front = (pulseIn(frontSensor, HIGH))/146;
-  if (direction == FORWARD){  
+  right = (pulseIn(rightSensor, HIGH))/146;
+  left  = (pulseIn(leftSensor, HIGH))/146;
+  
+  if(direction == STOP){
+    Wire.beginTransmission(4);
+    Wire.write(0x00);
+    Wire.endTransmission();
+  }
+
+  else if (direction == FORWARD){  
     if(front < 24 && front > 12){ // if between 1-2 feet, then go at MEDIUM speed
       // Slow slow slow
         front_speed = SLOW;
       }
-
-    else if(front <12){ // if object in front is less than 1 feet, then STOP
+    else if(front <12 || right < 8 || left < 8 ){ // if object in front is less than 1 feet, then STOP
         //STAHP
         front_speed = HALT;
       }
@@ -62,48 +82,44 @@ void checkSensors(){
     Wire.write(front_speed);
     Wire.endTransmission();
   }
+
+  else if(direction == LEFT){
+    Wire.beginTransmission(4);
+    Wire.write(0x14);
+    Wire.endTransmission();
+  }
+
+  else if(direction == RIGHT){
+    Wire.beginTransmission(4);
+    Wire.write(0x15);
+    Wire.endTransmission();
+  }
+
 }
 
 void loop()
 {
-  checkSensors();
+  updateMotors();
   if (Serial.available() > 0) { 
   // read the oldest byte in the serial buffer:
     incomingByte = Serial.read();
 
     if (incomingByte == 's') {    // stop
       direction = STOP;
-    	Wire.beginTransmission(4);
-    	Wire.write(0x00);
-    	Wire.endTransmission();
+    	
       //Serial.println("Stopped");
     } 
     // if it's an L (ASCII 76) turn off the LED:
     if (incomingByte == 'w') {    // go forward at slow speed
       direction = FORWARD;
-    	Wire.beginTransmission(4);
-    	Wire.write(front_speed);
-    	Wire.endTransmission();
       //Serial.println("Forward 1");
-    }
-    if (incomingByte == 'e') {    // go forward at faster speed
-    	Wire.beginTransmission(4);
-    	Wire.write(0x13);
-    	Wire.endTransmission();
-      //Serial.println("Forward 2");
     }
     if (incomingByte == 'a') {    // turn left
     	direction = LEFT;
-      Wire.beginTransmission(4);
-    	Wire.write(0x14);
-    	Wire.endTransmission();
       //Serial.println("Turning left");
     }
     if (incomingByte == 'd') {    // turn left
     	direction = RIGHT;
-      Wire.beginTransmission(4);
-    	Wire.write(0x15);
-    	Wire.endTransmission();
       //Serial.println("Turning right");
     }
   }
