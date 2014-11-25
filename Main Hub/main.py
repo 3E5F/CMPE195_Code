@@ -1,78 +1,102 @@
-import time
-import mainhub
-import pod
 from PySide import QtCore, QtGui
 import sys
 import os
 import temp
-import Queue
+from multiprocessing import Process, Queue
+import datetime
+import time
+
+import mainhub
+import pod
 
 default_values = {}
-default_values['stop_system'] = "stop_system"
-default_values['insert_station'] = "insert_station"
 
-pod_list=[]
-queue = Queue.Queue()
+started = False
 
 #testing
 count = 0
+test_file = None
 
-if __name__ == "__main__":
-	try:
-		director = mainhub.Director()
-		
+class Main(object):
+	def __init__(self):
+		self.ex = None
+		self.app = None
+		self.queue = Queue()
+		self.p1 = None
+		self.p2 = None
+		self.set = False
+		self.pod_list = []
+		self.director = None
 
-		#while queue.empty():
-		for elem in range(director.get_pod()):
-			pod_list.append(pod.Pod(elem))
+
+	def gui_start(self):
+		self.app = QtGui.QApplication(sys.argv)
+		self.ex = temp.GUI()
+		self.ex.confirm_signal.connect(self.push_queue)
+		self.ex.close_signal.connect(self.close_system)
+		self.ex.setWindowTitle("Spartan Superway Ticket System")  
+		self.ex.setWindowFlags(self.ex.windowFlags() | QtCore.Qt.CustomizeWindowHint) 
+		self.ex.setWindowFlags(self.ex.windowFlags() & ~QtCore.Qt.WindowMaximizeButtonHint)
+		self.ex.setWindowFlags(self.ex.windowFlags() & ~QtCore.Qt.WindowMinimizeButtonHint)
+		self.ex.show()
+		sys.exit(self.app.exec_())
+
+
+	def push_queue(self):
+		self.queue.put((self.ex.source, self.ex.destination))
+		print "Test"
+
+
+	def close_system(self):
+		self.queue.put(("system_close", None))
+		self.ex.close_system()
+		self.app.quit()
+
+	def shutdown(self):
+		self.director.close_system()
+		for elem in self.pod_list:
+			elem.close_system()	
+		exit()
+
+
+	def main_hub(self):
+		self.director = mainhub.Director(4)
+
+		for elem in range(self.director.get_pod()):
+			self.pod_list.append(pod.Pod(elem))
 
 		while(True):
-			if queue.empty():
-				for elem in pod_list:
+			if self.queue.empty():
+				print("Current State: REPORT")
+				for elem in self.pod_list:
 					elem.report()
-			elif not(queue.empty()):
-				(source, destination) = queue.get()
-				director.set_source(source)
-				director.set_destination(destination)
-				if director.get_source() == default_values['stop_system']:
-					director.close_system()
-					for elem in pod_list:
-						elem.close_system()
-					exit()
+			else:
+				current = self.queue.get()
+				if "system_close" in current:
+					print("Current State: SHUTDOWN")
+					self.shutdown()
 				else:
-					director.get_path()
-					for elem in pod_list:
+					print("Current State: DIRECTOR")
+					(source, destination) = current
+					print("%s-%s" % (source, destination))
+					self.director.set_source(source)
+					self.director.set_destination(destination)
+					self.director.get_path()
+					for elem in self.pod_list:
 						if elem.get_run() == False:
-							directions = director.translate_path()
+							directions = self.director.translate_path()
 							elem.set_run(True)
 							elem.logger(directions)
+							directions = ""
 							break
-			#test
-			'''
-			count = count + 1
-			if count == 3:
-				queue.put(("station_1", "station_5"))
-			elif count == 5:
-				queue.put(("station_5", "station_1"))
-			elif count == 7:
-				queue.put(("stop_system", None))
-			'''
+	def test(self):
+		self.p1 = Process(target=self.main_hub)
+		self.p2 = Process(target=self.gui_start)
+		self.p1.start()
+		time.sleep(3)
+		self.p2.start()
 
-	except Exception, error:
-		director.logger("ERROR IN SYSTEM: %s" % error)
 
-def derp():
-	# print 'Hi'
-	# mySource = ex.source
-	# myDestination = ex.destination
-	# print "Main Source - " + mySource
-	# print "Main Destination - " + mySource
-	queue.put((ex.source, ex.destination))
-	print "test"
-
-app = QtGui.QApplication(sys.argv)
-ex = temp.MainWindow()
-ex.pushed.connect(derp)
-ex.setWindowTitle("Spartan Superway Ticket System")
-ex.show()
-sys.exit(app.exec_())
+if __name__ == '__main__':
+	maintest = Main()
+	maintest.test()
