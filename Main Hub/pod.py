@@ -14,13 +14,11 @@ class Pod(core.Core):
 		self.speed = 0
 		self.proximity = 0
 
-		self.make_directory(default_values['log_directory'])
-
 		#instantiate write
-		self.f = open(default_values['log_directory']+"%s.txt" % pod_id, 'w')
+		self.f = open("%s%s.txt" % (default_values['log_directory'], pod_id), 'w')
 
 		#start log
-		self.logger("---INITIALIZING MAINHUB DIRECTOR SYSTEM---\n")
+		self.logger("---INITIALIZING POD SYSTEM---\n")
 
 
 	def get_id(self):

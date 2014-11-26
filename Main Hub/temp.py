@@ -1,274 +1,249 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'mainwindow.ui'
-#
-# Created: Tue Nov 11 13:46:19 2014
-#      by: pyside-uic 0.2.15 running on PySide 1.2.2
-#
-# WARNING! All changes made in this file will be lost!
-
-import sys
-import os.path
+import os
 from PySide import QtCore, QtGui
-import time
-import Queue
+from multiprocessing import Process
 
-import mainhub
-import pod
+import core
 
 default_values = {}
-default_values['stop_system'] = "stop_system"
-default_values['insert_station'] = "insert_station"
+default_values['working_directory'] = os.path.dirname(os.path.realpath(__file__))
+default_values['log_directory'] = os.path.join(default_values['working_directory'],"logs/GUI.txt")
+default_values['admin_password'] = "0195"
 
-class MainWindow(QtGui.QWidget):
-    pushed = QtCore.Signal()
+class GUI(QtGui.QWidget, core.Core):
+    confirm_signal = QtCore.Signal()
+    close_signal = QtCore.Signal()
 
     def __init__(self):
-	super(MainWindow,self).__init__()
+	super(GUI,self).__init__()
         self.source = None
         self.destination = None
-        self.queue = Queue.Queue()
-        self.initUI()
+        self.current_password = ""
+        self.tries = 1
 
-    def initUI(self):
-        self.source = None
-        self.destination = None
-        self.queue = Queue.Queue()
-        self.setUpFrame()
+        #self.make_directory(os.path.dirname(default_values['log_directory']))
+        self.f = open(default_values['log_directory'], 'w')
 
-    def setUpFrame(self):
-        #Main Window
-        #self.setGeometry(0,0,600,400)
-        self.setObjectName("MainWindow")
+        self.logger("---INITIALIZING GUI SYSTEM---\n")
+
+        
+        self.init_ui_main()
+
+
+    def init_ui_main(self):
+#Main Window
+        self.setObjectName("main_window")
         self.resize(600, 400)
-        self.centralWidget = QtGui.QWidget(self)
-        self.centralWidget.setObjectName("centralWidget")
+        self.central_widget = QtGui.QWidget(self)
+        self.central_widget.setObjectName("central_widget")
 
-        #TEST
-        self.tab = QtGui.QTabWidget(self)
-        #self.tab.setGeometry(QtCore.QRect(30, 45, 540, 340))
-        self.tab.setGeometry(QtCore.QRect(30, 45, 200, 20))
-        self.tab_bar = QtGui.QTabBar(self.tab)
-        tab_1 = self.tab_bar.addTab("Scheduler")
-        tab_2 = self.tab_bar.addTab("Pod Information")
+#STATIC TEXT MESSAGES
+        self.welcome_text = QtGui.QLabel(self.central_widget)
+        self.welcome_text.setGeometry(QtCore.QRect(68, 0, 464, 50))
+        self.welcome_text.setObjectName("welcome_text")
+        self.welcome_text.setStyleSheet("font: 30pt;")
 
-        #'Welcome to the Spartan Superway' Title
-        self.title = QtGui.QLabel(self.centralWidget)
-        self.title.setGeometry(QtCore.QRect(68, 0, 464, 50))
-        self.title.setObjectName("label")
-        self.title.setStyleSheet("font: 30pt;")
+        self.source_text = QtGui.QLabel(self.central_widget)
+        self.source_text.setGeometry(QtCore.QRect(30, 50, 300, 50))
+        self.source_text.setObjectName("source_text")
+        self.source_text.setStyleSheet("font: 18pt;")
 
-        #'Select source' Message
-        self.source = QtGui.QLabel(self.centralWidget)
-        self.source.setGeometry(QtCore.QRect(30, 50, 300, 50))
-        self.source.setObjectName("source")
-        self.source.setStyleSheet("font: 18pt;")
+        self.destination_text = QtGui.QLabel(self.central_widget)
+        self.destination_text.setGeometry(QtCore.QRect(30, 175, 300, 50))
+        self.destination_text.setObjectName("destination_text")
+        self.destination_text.setStyleSheet("font: 18pt;")
 
-        #'Select destination' Message
-        self.destination = QtGui.QLabel(self.centralWidget)
-        self.destination.setGeometry(QtCore.QRect(30, 175, 300, 50))
-        self.destination.setObjectName("destination")
-        self.destination.setStyleSheet("font: 18pt;")
+        self.current_source_text = QtGui.QLabel(self.central_widget)
+        self.current_source_text.setGeometry(QtCore.QRect(45,310, 350, 50))
+        self.current_source_text.setObjectName("current_source_text")
+        self.current_source_text.setStyleSheet("font: 18pt;")
 
-        self.print_source = QtGui.QLabel(self.centralWidget)
-        self.print_source.setGeometry(QtCore.QRect(45,310, 350, 50))
-        self.print_source.setObjectName("print_source")
-        self.print_source.setStyleSheet("font: 18pt;")
+        self.current_destination_text = QtGui.QLabel(self.central_widget)
+        self.current_destination_text.setGeometry(QtCore.QRect(45, 350, 350, 50))
+        self.current_destination_text.setObjectName("current_destination_text")
+        self.current_destination_text.setStyleSheet("font: 18pt;")
 
-        self.print_destination = QtGui.QLabel(self.centralWidget)
-        self.print_destination.setGeometry(QtCore.QRect(45, 350, 350, 50))
-        self.print_destination.setObjectName("print_destination")
-        self.print_destination.setStyleSheet("font: 18pt;")
+#BUTTONS
+        self.source_station_1_button = QtGui.QPushButton(self.central_widget)
+        self.source_station_1_button.setGeometry(QtCore.QRect(30, 100, 80, 20))
+        self.source_station_1_button.setObjectName("source_station_1_button")
 
-        #'Station 1' source
-        self.source_station_1 = QtGui.QPushButton(self.centralWidget)
-        self.source_station_1.setGeometry(QtCore.QRect(30, 100, 80, 20))
-        self.source_station_1.setObjectName("source_station_1")
+        self.source_station_2_button = QtGui.QPushButton(self.central_widget)
+        self.source_station_2_button.setGeometry(QtCore.QRect(120, 100, 80, 20))
+        self.source_station_2_button.setObjectName("source_station_2_button")
 
-        #'Station 2' source
-        self.source_station_2 = QtGui.QPushButton(self.centralWidget)
-        self.source_station_2.setGeometry(QtCore.QRect(120, 100, 80, 20))
-        self.source_station_2.setObjectName("source_station_2")
+        self.source_station_3_button = QtGui.QPushButton(self.central_widget)
+        self.source_station_3_button.setGeometry(QtCore.QRect(210, 100, 80, 20))
+        self.source_station_3_button.setObjectName("source_station_3_button")
 
-        #'Station 3' source
-        self.source_station_3 = QtGui.QPushButton(self.centralWidget)
-        self.source_station_3.setGeometry(QtCore.QRect(210, 100, 80, 20))
-        self.source_station_3.setObjectName("source_station_3")
+        self.source_station_4_button = QtGui.QPushButton(self.central_widget)
+        self.source_station_4_button.setGeometry(QtCore.QRect(30, 130, 80, 20))
+        self.source_station_4_button.setObjectName("source_station_4_button")
 
-        #'Station 4' source
-        self.source_station_4 = QtGui.QPushButton(self.centralWidget)
-        self.source_station_4.setGeometry(QtCore.QRect(30, 130, 80, 20))
-        self.source_station_4.setObjectName("source_station_4")
+        self.source_station_5_button = QtGui.QPushButton(self.central_widget)
+        self.source_station_5_button.setGeometry(QtCore.QRect(120, 130, 80, 20))
+        self.source_station_5_button.setObjectName("source_station_5_button")
 
-        #'Station 5' source
-        self.source_station_5 = QtGui.QPushButton(self.centralWidget)
-        self.source_station_5.setGeometry(QtCore.QRect(120, 130, 80, 20))
-        self.source_station_5.setObjectName("source_station_5")
+        self.source_station_6_button = QtGui.QPushButton(self.central_widget)
+        self.source_station_6_button.setGeometry(QtCore.QRect(210, 130, 80, 20))
+        self.source_station_6_button.setObjectName("source_station_6_button")
 
-        #'Station 6' source
-        self.source_station_6 = QtGui.QPushButton(self.centralWidget)
-        self.source_station_6.setGeometry(QtCore.QRect(210, 130, 80, 20))
-        self.source_station_6.setObjectName("source_station_6")
+        self.destination_station_1_button = QtGui.QPushButton(self.central_widget)
+        self.destination_station_1_button.setGeometry(QtCore.QRect(30, 225, 80, 20))
+        self.destination_station_1_button.setObjectName("destination_station_1_button")
 
-        #'Station 1' destination
-        self.destination_station_1 = QtGui.QPushButton(self.centralWidget)
-        self.destination_station_1.setGeometry(QtCore.QRect(30, 225, 80, 20))
-        self.destination_station_1.setObjectName("source_station_1")
+        self.destination_station_2_button = QtGui.QPushButton(self.central_widget)
+        self.destination_station_2_button.setGeometry(QtCore.QRect(120, 225, 80, 20))
+        self.destination_station_2_button.setObjectName("destination_station_2_button")
 
-        #'Station 2' destination
-        self.destination_station_2 = QtGui.QPushButton(self.centralWidget)
-        self.destination_station_2.setGeometry(QtCore.QRect(120, 225, 80, 20))
-        self.destination_station_2.setObjectName("source_station_2")
+        self.destination_station_3_button = QtGui.QPushButton(self.central_widget)
+        self.destination_station_3_button.setGeometry(QtCore.QRect(210, 225, 80, 20))
+        self.destination_station_3_button.setObjectName("destination_station_3_button")
 
-        #'Station 3' destination
-        self.destination_station_3 = QtGui.QPushButton(self.centralWidget)
-        self.destination_station_3.setGeometry(QtCore.QRect(210, 225, 80, 20))
-        self.destination_station_3.setObjectName("source_station_3")
+        self.destination_station_4_button = QtGui.QPushButton(self.central_widget)
+        self.destination_station_4_button.setGeometry(QtCore.QRect(30, 255, 80, 20))
+        self.destination_station_4_button.setObjectName("destination_station_4_button")
 
-        #'Station 4' destination
-        self.destination_station_4 = QtGui.QPushButton(self.centralWidget)
-        self.destination_station_4.setGeometry(QtCore.QRect(30, 255, 80, 20))
-        self.destination_station_4.setObjectName("source_station_4")
+        self.destination_station_5_button = QtGui.QPushButton(self.central_widget)
+        self.destination_station_5_button.setGeometry(QtCore.QRect(120, 255, 80, 20))
+        self.destination_station_5_button.setObjectName("destination_station_5_button")
 
-        #'Station 5' destination
-        self.destination_station_5 = QtGui.QPushButton(self.centralWidget)
-        self.destination_station_5.setGeometry(QtCore.QRect(120, 255, 80, 20))
-        self.destination_station_5.setObjectName("source_station_5")
+        self.destination_station_6_button = QtGui.QPushButton(self.central_widget)
+        self.destination_station_6_button.setGeometry(QtCore.QRect(210, 255, 80, 20))
+        self.destination_station_6_button.setObjectName("destination_station_6_button")
 
-        #'Station 6' destination
-        self.destination_station_6 = QtGui.QPushButton(self.centralWidget)
-        self.destination_station_6.setGeometry(QtCore.QRect(210, 255, 80, 20))
-        self.destination_station_6.setObjectName("source_station_6")
+        self.confirm_button= QtGui.QPushButton(self.central_widget)
+        self.confirm_button.setGeometry(QtCore.QRect(380, 320, 100, 75))
+        self.confirm_button.setObjectName("confirm_button")
 
-        self.confirm = QtGui.QPushButton(self.centralWidget)
-        self.confirm.setGeometry(QtCore.QRect(380, 320, 100, 75))
-        self.confirm.setObjectName("confirm")
+        self.cancel_button = QtGui.QPushButton(self.central_widget)
+        self.cancel_button.setGeometry(QtCore.QRect(480, 320, 100, 75))
+        self.cancel_button.setObjectName("cancel_button")
 
-        self.cancel = QtGui.QPushButton(self.centralWidget)
-        self.cancel.setGeometry(QtCore.QRect(480, 320, 100, 75))
-        self.cancel.setObjectName("cancel")
-
-        self.line = QtGui.QFrame(self.centralWidget)
+#LINES
+        self.line = QtGui.QFrame(self.central_widget)
         self.line.setGeometry(QtCore.QRect(30, 300, 540, 20))
         self.line.setStyleSheet("")
         self.line.setFrameShape(QtGui.QFrame.HLine)
         self.line.setObjectName("line")
 
-        #self.setCentralWidget(self.centralWidget)
+#CONNECTORS
+        #source stations
+        self.source_station_1_button.clicked.connect(self.source_station_1)
+        self.source_station_2_button.clicked.connect(self.source_station_2)
+        self.source_station_3_button.clicked.connect(self.source_station_3)
+        self.source_station_4_button.clicked.connect(self.source_station_4)
+        self.source_station_5_button.clicked.connect(self.source_station_5)
+        self.source_station_6_button.clicked.connect(self.source_station_6)
 
-        self.retranslateUi()
-        self.source_station_1.clicked.connect(self.source1)
-        self.source_station_2.clicked.connect(self.source2)
-        self.source_station_3.clicked.connect(self.source3)
-        self.source_station_4.clicked.connect(self.source4)
-        self.source_station_5.clicked.connect(self.source5)
-        self.source_station_6.clicked.connect(self.source6)
-        self.destination_station_1.clicked.connect(self.destination1)
-        self.destination_station_2.clicked.connect(self.destination2)
-        self.destination_station_3.clicked.connect(self.destination3)
-        self.destination_station_4.clicked.connect(self.destination4)
-        self.destination_station_5.clicked.connect(self.destination5)
-        self.destination_station_6.clicked.connect(self.destination6)
-        self.cancel.clicked.connect(self.cancel_press)
-        #self.confirm.clicked.connect(self.confirmSignal)
-        self.confirm.clicked.connect(self.confirm_press)
-        #QtCore.QMetaObject.connectSlotsByName(MainWindow)
-    
-    def confirmSignal(self):
-        print "Temp Source: "+self.source
-        print "Temp Destination: "+self.destination
-        self.pushed.emit()
+        #destination stations
+        self.destination_station_1_button.clicked.connect(self.destination_station_1)
+        self.destination_station_2_button.clicked.connect(self.destination_station_2)
+        self.destination_station_3_button.clicked.connect(self.destination_station_3)
+        self.destination_station_4_button.clicked.connect(self.destination_station_4)
+        self.destination_station_5_button.clicked.connect(self.destination_station_5)
+        self.destination_station_6_button.clicked.connect(self.destination_station_6)
 
-    def source1(self):
-        self.source = "Station 1"
-        print "Station 1"
+        #cancel/confirm 
+        self.cancel_button.clicked.connect(self.cancel_press)
+        self.confirm_button.clicked.connect(self.confirm_press)
+
+        #translate UIElements
+        self.retranslate_ui_main()
+
+
+    def source_station_1(self):
+        self.source = "station_1"
         self.update_source()
 
-    def source2(self):
-        self.source = "Station 2"
-        print "Station 2"
+
+    def source_station_2(self):
+        self.source = "station_2"
         self.update_source()
 
-    def source3(self):
-        self.source = "Station 3"
-        print "Station 3"
+
+    def source_station_3(self):
+        self.source = "station_3"
         self.update_source()
 
-    def source4(self):
-        self.source = "Station 4"
-        print "Station 4"
+
+    def source_station_4(self):
+        self.source = "station_4"
         self.update_source()
 
-    def source5(self):
-        self.source = "Station 5"
-        print "Station 5"
+
+    def source_station_5(self):
+        self.source = "station_5"
         self.update_source()
 
-    def source6(self):
-        self.source = "Station 6"
-        print "Station 6"
+
+    def source_station_6(self):
+        self.source = "station_6"
         self.update_source()
 
-    def destination1(self):
-        self.destination = "Station 1"
-        print "Station 1"
+
+    def destination_station_1(self):
+        self.destination = "station_1"
         self.update_destination()
 	   
-    def destination2(self):
-        self.destination = "Station 2"
-        print "Station 2"
+
+    def destination_station_2(self):
+        self.destination = "station_2"
         self.update_destination()
 
-    def destination3(self):
-        self.destination = "Station 3"
-        print "Station 3"
+
+    def destination_station_3(self):
+        self.destination = "station_3"
         self.update_destination()
 
-    def destination4(self):
-        self.destination = "Station 4"
-        print "Station 4"
+
+    def destination_station_4(self):
+        self.destination = "station_4"
         self.update_destination()
 
-    def destination5(self):
-        self.destination = "Station 5"
-        print "Station 5"
+
+    def destination_station_5(self):
+        self.destination = "station_5"
         self.update_destination()
 
-    def destination6(self):
-        self.destination = "Station 6"
-        print "Station 6"
+
+    def destination_station_6(self):
+        self.destination = "station_6"
         self.update_destination()
+
 
     def update_source(self):
-        text = 'Start destination: \t\t'+self.source
-        self.print_source.setText(text)
+        self.current_source_text.setText('Start destination: \t\t'+self.source.capitalize().replace("_"," "))
+
 
     def update_destination(self):
-        text = 'Desired destination: \t'+self.destination
-        self.print_destination.setText(text)
+        self.current_destination_text.setText('Desired destination: \t'+self.destination.capitalize().replace("_", " "))
     
-    def retranslateUi(self):
-        self.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.title.setText(QtGui.QApplication.translate("MainWindow", "Welcome to the Spartan Superway", None, QtGui.QApplication.UnicodeUTF8))
-        self.source.setText(QtGui.QApplication.translate("MainWindow", "Please select your source station:", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination.setText(QtGui.QApplication.translate("MainWindow", "Please select your destination station:", None, QtGui.QApplication.UnicodeUTF8))
-        self.print_source.setText(QtGui.QApplication.translate("MainWindow", "Start destination: \t\tNot selected", None, QtGui.QApplication.UnicodeUTF8))
-        self.print_destination.setText(QtGui.QApplication.translate("MainWindow", "Desired destination: \tNot selected", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_1.setText(QtGui.QApplication.translate("MainWindow", "Station 1", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_2.setText(QtGui.QApplication.translate("MainWindow", "Station 2", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_3.setText(QtGui.QApplication.translate("MainWindow", "Station 3", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_4.setText(QtGui.QApplication.translate("MainWindow", "Station 4", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_5.setText(QtGui.QApplication.translate("MainWindow", "Station 5", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_6.setText(QtGui.QApplication.translate("MainWindow", "Station 6", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_1.setText(QtGui.QApplication.translate("MainWindow", "Station 1", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_2.setText(QtGui.QApplication.translate("MainWindow", "Station 2", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_3.setText(QtGui.QApplication.translate("MainWindow", "Station 3", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_4.setText(QtGui.QApplication.translate("MainWindow", "Station 4", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_5.setText(QtGui.QApplication.translate("MainWindow", "Station 5", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_6.setText(QtGui.QApplication.translate("MainWindow", "Station 6", None, QtGui.QApplication.UnicodeUTF8))
-        self.confirm.setText(QtGui.QApplication.translate("MainWindow", "Confirm", None, QtGui.QApplication.UnicodeUTF8))
-        self.cancel.setText(QtGui.QApplication.translate("MainWindow", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
 
+    def retranslate_ui_main(self):
+        self.setWindowTitle(QtGui.QApplication.translate("main_window", "main_window", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.welcome_text.setText(QtGui.QApplication.translate("main_window", "Welcome to the Spartan Superway", None, QtGui.QApplication.UnicodeUTF8))
+        self.source_text.setText(QtGui.QApplication.translate("main_window", "Please select your source station:", None, QtGui.QApplication.UnicodeUTF8))
+        self.destination_text.setText(QtGui.QApplication.translate("main_window", "Please select your destination station:", None, QtGui.QApplication.UnicodeUTF8))
+        self.current_source_text.setText(QtGui.QApplication.translate("main_window", "Start destination: \t\tNot selected", None, QtGui.QApplication.UnicodeUTF8))
+        self.current_destination_text.setText(QtGui.QApplication.translate("main_window", "Desired destination: \tNot selected", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.source_station_1_button.setText(QtGui.QApplication.translate("main_window", "Station 1", None, QtGui.QApplication.UnicodeUTF8))
+        self.source_station_2_button.setText(QtGui.QApplication.translate("main_window", "Station 2", None, QtGui.QApplication.UnicodeUTF8))
+        self.source_station_3_button.setText(QtGui.QApplication.translate("main_window", "Station 3", None, QtGui.QApplication.UnicodeUTF8))
+        self.source_station_4_button.setText(QtGui.QApplication.translate("main_window", "Station 4", None, QtGui.QApplication.UnicodeUTF8))
+        self.source_station_5_button.setText(QtGui.QApplication.translate("main_window", "Station 5", None, QtGui.QApplication.UnicodeUTF8))
+        self.source_station_6_button.setText(QtGui.QApplication.translate("main_window", "Station 6", None, QtGui.QApplication.UnicodeUTF8))
+        self.destination_station_1_button.setText(QtGui.QApplication.translate("main_window", "Station 1", None, QtGui.QApplication.UnicodeUTF8))
+        self.destination_station_2_button.setText(QtGui.QApplication.translate("main_window", "Station 2", None, QtGui.QApplication.UnicodeUTF8))
+        self.destination_station_3_button.setText(QtGui.QApplication.translate("main_window", "Station 3", None, QtGui.QApplication.UnicodeUTF8))
+        self.destination_station_4_button.setText(QtGui.QApplication.translate("main_window", "Station 4", None, QtGui.QApplication.UnicodeUTF8))
+        self.destination_station_5_button.setText(QtGui.QApplication.translate("main_window", "Station 5", None, QtGui.QApplication.UnicodeUTF8))
+        self.destination_station_6_button.setText(QtGui.QApplication.translate("main_window", "Station 6", None, QtGui.QApplication.UnicodeUTF8))
+        self.confirm_button.setText(QtGui.QApplication.translate("main_window", "Confirm\nSelection", None, QtGui.QApplication.UnicodeUTF8))
+        self.cancel_button.setText(QtGui.QApplication.translate("main_window", "Cancel\nSelection", None, QtGui.QApplication.UnicodeUTF8))
+
+    
     def cancel_press(self):
         self.source = "Not selected"
         self.destination = "Not selected"
@@ -277,17 +252,195 @@ class MainWindow(QtGui.QWidget):
         self.source = None
         self.destination = None
 
+    
     def confirm_press(self):
-        # self.queue.put((self.source, self.destination))
-        # print self.queue.get()
-        self.pushed.emit()
+        self.confirm_signal.emit()
 
-def main():
-   app = QtGui.QApplication(sys.argv)
-   ex = MainWindow()
-   ex.setWindowTitle("Spartan Superway Ticket System")
-   ex.show()
-   sys.exit(app.exec_())
-	
-if __name__ == '__main__':
-	main()
+    
+    def closeEvent(self, event):
+        self.init_ui_admin()
+
+
+    def init_ui_admin(self):
+#ADMIN WINDOW
+        self.admin_window = QtGui.QWidget()
+        self.admin_window.resize(350, 250)
+        self.admin_window.setWindowTitle('Admin Window')
+
+#WINDOW TITLE
+        self.admin_window.setWindowFlags(self.admin_window.windowFlags() | QtCore.Qt.CustomizeWindowHint) 
+        self.admin_window.setWindowFlags(self.admin_window.windowFlags() & ~QtCore.Qt.WindowTitleHint)
+        self.admin_window.setWindowFlags(self.admin_window.windowFlags() & ~QtCore.Qt.WindowSystemMenuHint)
+        self.admin_window.setWindowFlags(self.admin_window.windowFlags() & ~QtCore.Qt.WindowMaximizeButtonHint)
+        self.admin_window.setWindowFlags(self.admin_window.windowFlags() & ~QtCore.Qt.WindowMinimizeButtonHint)
+        self.admin_window.setWindowFlags(self.admin_window.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
+
+#STATIC TEXTS
+        self.admin_window.instruction_text = QtGui.QLabel(self.admin_window)
+        self.admin_window.instruction_text.setGeometry(QtCore.QRect(10, 80, 150, 150))
+        self.admin_window.instruction_text.setObjectName("instruction_text")
+        self.admin_window.instruction_text.setStyleSheet("font: 30pt;")
+
+        self.admin_window.code_text = QtGui.QLineEdit(self.admin_window)
+        self.admin_window.code_text.setStyleSheet("font: 30pt;")
+        self.admin_window.code_text.setGeometry(QtCore.QRect(15, 30, 150, 50))
+        
+#BUTTONS
+        self.admin_window.cancel_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.cancel_button.setGeometry(QtCore.QRect(180, 180, 50, 50))
+        self.admin_window.cancel_button.setObjectName("cancel_button")
+        self.admin_window.cancel_button.clicked.connect(self.press_cancel)
+
+        self.admin_window.enter_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.enter_button.setGeometry(QtCore.QRect(280, 180, 50, 50))
+        self.admin_window.enter_button.setObjectName("enter_button")
+        self.admin_window.enter_button.clicked.connect(self.press_enter)
+
+        self.admin_window.num_0_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_0_button.setGeometry(QtCore.QRect(230, 180, 50, 50))
+        self.admin_window.num_0_button.setObjectName("num_0_button")
+        self.admin_window.num_0_button.clicked.connect(self.press_0)
+
+        self.admin_window.num_1_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_1_button.setGeometry(QtCore.QRect(180, 30, 50, 50))
+        self.admin_window.num_1_button.setObjectName("num_1_button")
+        self.admin_window.num_1_button.clicked.connect(self.press_1)
+
+        self.admin_window.num_2_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_2_button.setGeometry(QtCore.QRect(230, 30, 50, 50))
+        self.admin_window.num_2_button.setObjectName("num_2_button")
+        self.admin_window.num_2_button.clicked.connect(self.press_2)
+
+        self.admin_window.num_3_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_3_button.setGeometry(QtCore.QRect(280, 30, 50, 50))
+        self.admin_window.num_3_button.setObjectName("num_3_button")
+        self.admin_window.num_3_button.clicked.connect(self.press_3)
+
+        self.admin_window.num_4_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_4_button.setGeometry(QtCore.QRect(180, 80, 50, 50))
+        self.admin_window.num_4_button.setObjectName("num_4_button")
+        self.admin_window.num_4_button.clicked.connect(self.press_4)
+
+        self.admin_window.num_5_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_5_button.setGeometry(QtCore.QRect(230, 80, 50, 50))
+        self.admin_window.num_5_button.setObjectName("num_5_button")
+        self.admin_window.num_5_button.clicked.connect(self.press_5)
+
+        self.admin_window.num_6_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_6_button.setGeometry(QtCore.QRect(280, 80, 50, 50))
+        self.admin_window.num_6_button.setObjectName("num_6_button")
+        self.admin_window.num_6_button.clicked.connect(self.press_6)
+
+        self.admin_window.num_7_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_7_button.setGeometry(QtCore.QRect(180, 130, 50, 50))
+        self.admin_window.num_7_button.setObjectName("num_7_button")
+        self.admin_window.num_7_button.clicked.connect(self.press_7)
+
+        self.admin_window.num_8_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_8_button.setGeometry(QtCore.QRect(230, 130, 50, 50))
+        self.admin_window.num_8_button.setObjectName("num_8_button")
+        self.admin_window.num_8_button.clicked.connect(self.press_8)
+
+        self.admin_window.num_9_button = QtGui.QPushButton(self.admin_window)
+        self.admin_window.num_9_button.setGeometry(QtCore.QRect(280, 130, 50, 50))
+        self.admin_window.num_9_button.setObjectName("num_9_button")
+        self.admin_window.num_9_button.clicked.connect(self.press_9)
+
+        self.retranslate_ui_admin()
+
+    def retranslate_ui_admin(self):
+        self.admin_window.instruction_text.setText(QtGui.QApplication.translate("admin_window", "Enter \nShutdown \nCode \nAbove", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.code_text.setText(QtGui.QApplication.translate("admin_window", "", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_0_button.setText(QtGui.QApplication.translate("admin_window", "0", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_1_button.setText(QtGui.QApplication.translate("admin_window", "1", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_2_button.setText(QtGui.QApplication.translate("admin_window", "2", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_3_button.setText(QtGui.QApplication.translate("admin_window", "3", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_4_button.setText(QtGui.QApplication.translate("admin_window", "4", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_5_button.setText(QtGui.QApplication.translate("admin_window", "5", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_6_button.setText(QtGui.QApplication.translate("admin_window", "6", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_7_button.setText(QtGui.QApplication.translate("admin_window", "7", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_8_button.setText(QtGui.QApplication.translate("admin_window", "8", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.num_9_button.setText(QtGui.QApplication.translate("admin_window", "9", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.cancel_button.setText(QtGui.QApplication.translate("admin_window", "C", None, QtGui.QApplication.UnicodeUTF8))
+        self.admin_window.enter_button.setText(QtGui.QApplication.translate("admin_window", "E", None, QtGui.QApplication.UnicodeUTF8))
+
+        self.admin_window.show()
+
+
+    def press_0(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "0"
+
+
+    def press_1(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "1"
+
+
+    def press_2(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "2"
+
+
+    def press_3(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "3"
+
+
+    def press_4(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "4"
+
+
+    def press_5(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "5"
+
+
+    def press_6(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "6"
+
+
+    def press_7(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "7"
+
+
+    def press_8(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "8"
+
+
+    def press_9(self):
+        self.update_keypad()
+        self.current_password = self.current_password + "9"
+
+
+    def press_cancel(self):
+        self.current_password = ""
+        self.admin_window.code_text.setText("")
+
+
+    def press_enter(self):
+        self.logger("Attempt System Shutdown: %s" % self.tries)
+        self.logger("Check Passcode: %s\n" % (self.current_password == default_values['admin_password']))
+        if self.current_password == default_values['admin_password']:
+            self.current_password = ""
+            self.tries = 1
+            self.close_signal.emit()
+        else:
+            self.press_cancel()
+            self.tries += 1
+            if self.tries >= 4:
+                self.tries = 1
+                self.show()
+
+
+    def update_keypad(self):
+        self.admin_window.code_text.setText(self.admin_window.code_text.text() + "*")
+
+
+    def close_system(self):
+        self.logger("---SHUTING DOWN GUI SYSTEM---\n")
+        self.f.close()

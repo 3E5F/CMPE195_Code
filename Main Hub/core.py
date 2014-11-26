@@ -23,6 +23,8 @@ class Core(object):
 		Input: 
 			folder name, created into relative directory
 		'''
+		self.remove_directory(directory)
+
 		#if folder does not exist, create it
 		if not(os.path.exists(os.path.dirname(directory))):
 			os.makedirs(os.path.dirname(directory))
@@ -30,7 +32,8 @@ class Core(object):
 	def remove_directory(self, directory):
 		'''
 		'''
-		shutil.rmtree(directory)
+		if os.path.isdir(directory):
+			shutil.rmtree(directory)
 
 
 	def logger(self, message=''):

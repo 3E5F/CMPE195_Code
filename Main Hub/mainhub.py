@@ -15,7 +15,7 @@ default_values['direction_content'] = {'station_1':{'station_2':('0x00', 20), 's
 default_values['direction_directory'] = os.path.join(default_values['working_directory'], "direction.plist")
 
 class Director(core.Core):
-	def __init__(self):
+	def __init__(self, number_pod):
 		'''
 		Director class communicates with GUI
 		Director class takes inputs and encodes instructions to feed through wireless communication
@@ -25,10 +25,9 @@ class Director(core.Core):
 		self.send_commands = []
 		self.source = None
 		self.destination = None
-		self.number_pod = None
+		self.number_pod = number_pod
 
 		#make log directory
-		self.remove_directory(os.path.dirname(default_values['log_directory']))
 		self.make_directory(default_values['log_directory'])
 
 		#instantiate write
@@ -40,7 +39,7 @@ class Director(core.Core):
 		#import plists
 		self.graph = self.import_plist(default_values['graph_directory'], default_values['graph_content'])
 		self.direction = self.import_plist(default_values['direction_directory'], default_values['direction_content'])
-		self.init_pods()
+		#self.init_pods()
 
 
 
