@@ -1,29 +1,33 @@
 /* 
 This code is for putting together the 32-bit message for transmission over serial
 */
-char bytes[4];
+byte bytes[4];
 
 
 uint32_t outgoing_message = 0x00000000;
 void setup(){
 	Serial.begin(9600);
-	bytes[0] = 0x40;
-	bytes[1] = 0xFF;
-	bytes[2] = 0xFF;
-	bytes[3] = 0xFF;
+	bytes[0] = 0xC0;
+	bytes[1] = 0x00;
+	bytes[2] = 0x00;
+	bytes[3] = 0x00;
 }
 
 void loop (){
-	outgoing_message = 0x40000000;
-	Serial.println(outgoing_message, HEX);
-
-	delay(2000);
-	outgoing_message = 0x42000000;
-	Serial.println(outgoing_message, HEX);
-
-	delay(2000);
-	outgoing_message = 0x44000000;
-	Serial.println(outgoing_message, HEX);
+	outgoing_message = 0x00000000;
+	bytes[0] = 0xC0;
+	Serial.write(bytes,4);
+	delay(3000);
 	
-	delay(2000);
+	outgoing_message = 0x00000000;
+	bytes[0] = 0xC2;
+	//Serial.print(outgoing_message);
+	Serial.write(bytes,4);
+	delay(3000);
+
+	outgoing_message = 0x00000000;
+	bytes[0] = 0xC4;
+	//Serial.print(outgoing_message);
+	Serial.write(bytes,4);
+	delay(3000);
 }

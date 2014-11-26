@@ -15,6 +15,7 @@ const int rightSensor = 3; // right sensor
 long front, left, right;  //used for output to serial - converted to inches
 char bytes[11];
 
+
 enum PODID{
   Pod1 = 0x01,
   Pod2 = 0x02,
@@ -34,6 +35,18 @@ enum FRONTSPEED{
   HALT = 0x00,
 };
 
+enum RIGHTSPEED{
+  R_STOP = 0x14,
+  R_SLOW = 0x16,
+  R_FAST = 0x18,
+};
+
+enum LEFTSPEED{
+  L_STOP = 0x15,
+  L_SLOW = 0x17,
+  L_FAST = 0x19,
+};
+
 enum MESSAGETYPE{
   MainHub_Path_InitialPathMsg   = 0x00,
   Pod_Path_ConfirmPathMsg       = 0x01,
@@ -45,9 +58,20 @@ enum MESSAGETYPE{
 };
 
 FRONTSPEED front_speed;
+RIGHTSPEED right_speed;
+LEFTSPEED left_speed;
 DIRECTION direction = STOP;
 MESSAGETYPE message_type;
 PODID PodID;
+
+DIRECTION commands[7] = {FORWARD, RIGHT, LEFT, RIGHT, LEFT, FORWARD, STOP};
+int instruction=0;
+
+int R_HALL = 8;
+int L_HALL = 9;
+int rHall = 0;
+int lHall = 0;
+int set = 0;
 
 void setup()
 {
@@ -56,6 +80,8 @@ void setup()
   pinMode(frontSensor, INPUT);
   pinMode(leftSensor, INPUT);
   pinMode(rightSensor, INPUT);
+  pinMode(R_HALL, INPUT);
+  pinMode(L_HALL, INPUT);
   PodID = Pod1;
 }
 
@@ -89,40 +115,43 @@ void updateMotors(){
   }
 
   else if(direction == LEFT){
+    if(front <12 || right < 8 || left < 8 )
+      left_speed = L_STOP;
+    else
+      left_speed = L_SLOW;
+
     Wire.beginTransmission(4);
-    Wire.write(0x14);
-    Wire.endTransmission();
+    Wire.write(left_speed);
+    Wire.endTransmission();  
   }
 
   else if(direction == RIGHT){
+    if(front <12 || right < 8 || left < 8 )
+      right_speed = R_STOP;
+    else
+      right_speed = R_SLOW;
     Wire.beginTransmission(4);
-    Wire.write(0x15);
+    Wire.write(right_speed);
     Wire.endTransmission();
   }
   else
     Serial.print("ERROR\n");
 }
 
-void checkAndSet_Msg(uint32_t incomingMsg){
-  //Check receiver and sender bits
-  Serial.print(incomingMsg);
-  if ((incomingMsg>>28) & 0xC == 0xC){  // check first two bits for receiver ID - if it matches PodID then execute.
-    Serial.print("HitHitHit");
-    if((incomingMsg>>24) & 0x0F == MainHub_Path_InitialPathMsg){  // initial path message coming from main hub
-      direction = FORWARD;
-      Serial.print("Print 1");
+void checkHalls(){
+  rHall = digitalRead(R_HALL);
+  lHall = digitalRead(L_HALL);
+
+  if (rHall == 0 || lHall == 0){
+    if (set == 0){
+      direction = commands[instruction];
+      set = 1;
     }
-    if((incomingMsg>>24) & 0x0F == MainHub_Path_GoPathMsg){       // "GO" path message coming from main hub
-      direction = RIGHT;
-      Serial.print("Print 2");
-    }
-    if((incomingMsg>>24) & 0x0F == MainHub_Status_RequestStatus){ // "Request Status" message coming from main hub
-      direction = LEFT;
-      Serial.print("Print 3");
-    }
-    if((incomingMsg>>24) & 0x0F == EmergencyShutDown){    // EmergencyShutDown
-      Serial.print("Emergency Shut Down!");
-      direction = STOP;
+  }
+  else if(rHall == 1 && lHall ==1){
+    if(set == 1){
+      set = 0;
+      instruction++;
     }
   }
 }
@@ -130,41 +159,5 @@ void checkAndSet_Msg(uint32_t incomingMsg){
 void loop()
 {
   updateMotors();
-  
-  Serial.flush();
-  if (Serial.available() > 0) { // Receive Serial Message
-    Serial.readBytes(bytes, 10);
-    
-    
-    
-    incomingMsg =0;
-    Serial.print("Hit\r\n");
-  
-    for (int i =0 ;i<11; i++){
-      if (bytes[i]==NULL)
-        break;
-      else
-        incomingMsg = (incomingMsg*10)+(bytes[i] - '0');
-    }
-    for (int i = 0; i<11; i++){
-      bytes[i]=NULL;
-    }
-    Serial.print(incomingMsg,HEX);
-    Serial.println();
-    //checkAndSet_Msg(incomingMsg);
-    /*
-    if (incomingMsg == 's') {    // stop
-      direction = STOP;
-    } 
-    if (incomingMsg == 'w') {    // go forward at slow speed
-      direction = FORWARD;
-    }
-    if (incomingMsg == 'a') {    // turn left
-    	direction = LEFT;
-    }
-    if (incomingMsg == 'd') {    // turn right
-    	direction = RIGHT;
-    }
-    */
-  }
+  checkHalls();
 }
