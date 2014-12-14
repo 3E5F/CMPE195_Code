@@ -12,12 +12,20 @@ int ID = 0x3;   //ID of the pod - 1, 2, 3
 uint32_t incomingMsg;      // a variable to read incoming serial data into
 uint32_t outgoingValue;
 uint32_t payload = 0x00000000; // upper byte should not be used - should be all 0's
+uint32_t instructionSequence;
 const int frontSensor = 7; // front sensor
 const int leftSensor = 5; // left sensor
 const int rightSensor = 3; // right sensor
+int R_HALL = 8;
+int L_HALL = 9;
+int rHall = 0;
+int lHall = 0;
+int set = 0;    //for hall sensors
+int instruction = 0;
 long front, left, right;  //used for output to serial - converted to inches
 char incomingCharArray[11];
 char outputBuff[11];
+bool running = false;
 
 enum PODID{
   Pod1 = 0x1,
@@ -51,9 +59,9 @@ enum MESSAGETYPE{
 FRONTSPEED front_speed;
 DIRECTION direction = STOP;
 MESSAGETYPE message_type;
-
-//===================== USER DEFINED SECTION =================
 PODID PodID;
+DIRECTION commands[12]; // longest message is 12 directions long (24bit payload for 2-bit instruction)
+//===================== USER DEFINED SECTION =================
 //=================== END USER DEFINED SECTION ===============
 
 void setup(){
@@ -91,7 +99,7 @@ void setup(){
 void updateMotors(){
   /*
    This function updates the motors. When there is a change in direction
-   or sensor values, this function will decide what the motors will do.
+   or sensor values, this function decides what the motors should do.
    This section of code computes the right values to send to the motor
    controller via I2C interface.
   */
@@ -103,6 +111,8 @@ void updateMotors(){
     Wire.beginTransmission(4);
     Wire.write(0x00);
     Wire.endTransmission();
+    running = false;
+    instruction = 0;
   }
 
   else if (direction == FORWARD){  
@@ -180,34 +190,68 @@ void checkAndSet_Msg(uint32_t incomingMsg){
   */
   if(((incomingMsg >> 24) & 0x0F) == MainHub_Path_InitialPathMsg){  // initial path message coming from main hub
     #ifdef DEBUG
-    Serial.write("Received MainHub_Path_InitialPathMsg\n\r");
+      Serial.write("Received MainHub_Path_InitialPathMsg\n\r");
     #endif
     message_type = Pod_Path_ConfirmPathMsg;
     payload = incomingMsg & 0x00FFFFFF;
-    //outgoingValue = 285274352;
+    payload2DirectionSequence();
+    instruction  = 0;
+    packageAndSendMsg();  
   }
   else if(((incomingMsg >> 24) & 0x0F) == MainHub_Path_GoPathMsg){       // "GO" path message coming from main hub
     #ifdef DEBUG
-    Serial.write("Received MainHub_Path_GoPathMsg\n\r");
+      Serial.write("Received MainHub_Path_GoPathMsg\n\r");
     #endif
     message_type = Pod_Path_ConfirmGoMsg;
+    running = true;
+    packageAndSendMsg();  
   }
   else if(((incomingMsg >> 24) & 0x0F) == MainHub_Status_RequestStatus){ // "Request Status" message coming from main hub
     #ifdef DEBUG
-    Serial.write("Received MainHub_Status_RequestStatus\n\r");
+      Serial.write("Received MainHub_Status_RequestStatus\n\r");
     #endif
     message_type = Pod_Status_StatusInfo;
+    packageAndSendMsg();  
   }
   else if(((incomingMsg >> 24) & 0x0F) == EmergencyShutDown){    // EmergencyShutDown
     #ifdef DEBUG
-    Serial.write("Received Emergency Shut Down Code!\n\r");
+      Serial.write("Received Emergency Shut Down Code!\n\r");
     #endif
     direction = STOP;
+    running = false;
+    instruction = 0;
   }
   else{
     Serial.write("Unknown\n\r");
   }
-  packageAndSendMsg();  
+  
+}
+void payload2DirectionSequence(){
+  /*
+  This function converts the payload to an array called 'commands[12]'
+  The array is to be used for execution of each direction after each
+  magnet that the pod passes. All this function does is set the values
+  of "commands[12]".
+  */
+  DIRECTION temp;
+  for(int i=0; i<12; i++){
+    byte bin2Direction = (payload >> (22-(i*2))) & 0x03;
+    if (bin2Direction = 0x03){        //forwards
+      temp = FORWARD;
+    }
+    else if(bin2Direction = 0x02){    //left
+      temp = LEFT;
+    }
+    else if(bin2Direction = 0x01){    //right
+      temp = RIGHT;
+    }
+    else if(bin2Direction = 0x00){    //stop
+      temp = STOP;
+    }
+    else
+      Serial.write("There is an error converting payload to array!\n\r");
+    commands[i] = temp;
+  }
 }
 
 void packageAndSendMsg(){
@@ -225,12 +269,13 @@ void packageAndSendMsg(){
   of doing this.
   */
   byte sector[4];
-  sector[0] = (PodID << 4) & 0xF0;  //(PodID<<4)& message_type;
-  sector[0] |= (message_type & 0x0F); // set message Type
-  sector[1] = (payload >> 16); 
-  sector[2] = (payload >> 8) | 0x00; //(payload >> 8) & 0xFF;
-  sector[3] = payload | 0x00; //| (payload & 0xFF);
-    
+  sector[0] = (PodID << 4) & 0xF0;    //set PodID as the Sender;
+  sector[0] |= (message_type & 0x0F); // set message_type
+  sector[1] = (payload >> 16);        // (NEED TO CLEAN THIS UP)
+  sector[2] = (payload >> 8) | 0x00;  // (NEED TO CLEAN THIS UP)
+  sector[3] = payload | 0x00;         // (NEED TO CLEAN THIS UP)
+  
+  /* --- Start putting the integer together by putting in 8 bits at a time! ---*/  
   outgoingValue = 0x00000000; //clearing outgoingMsg
   outgoingValue |= sector[0];
   outgoingValue = outgoingValue<<8;
@@ -240,14 +285,56 @@ void packageAndSendMsg(){
   outgoingValue = outgoingValue<<8;
   outgoingValue |= sector[3];
   
-  /* We really don't care about 'out' but we use it only to fill the outputBuff C-string */
+  /* We really don't care about 'out' but we use it only to fill the
+  outputBuff C-string for broadcasting */
   String out;
   out += outgoingValue;
   out.toCharArray(outputBuff,11);
   Serial.write(outputBuff);
 }
 
+void checkHalls(){
+  /*
+  If the system is in running state, then the function checks
+  for magnet. If a magnet passes by, all this function does is
+  set/change the direction for the updateMotors() function to
+  use. The safety mechanism in this function is that if the
+  instruction tries to go past the 12 command limit, it
+  changes the running state to false and resets instruction
+  counter to 0.
+  */
+  
+  #ifdef DEBUG
+    Serial.write("Checking Hall Sensors\n\r");
+  #endif
+  rHall = digitalRead(R_HALL);
+  lHall = digitalRead(L_HALL);
+
+  if (rHall == 0 || lHall == 0){  // if a magnet passes
+    if (set == 0){
+      direction = commands[instruction];
+      set = 1;
+    }
+  }
+  else if(rHall == 1 && lHall ==1){
+    if(set == 1){
+      set = 0;
+      instruction++;
+    }
+  }
+  // If instruction hits 12, it's reset to 0 and stops running
+  // Safety Mechanism
+  if (instruction == 12){ 
+    running = false;
+    instruction = 0;
+  }
+}
+
 void loop(){
+  /*
+  This loop starts executing ...er... looping after setup has finished. 
+  */
+  
   #ifdef DEBUG
     Serial.write("Loop!\n\r");
   #endif
@@ -261,4 +348,7 @@ void loop(){
   //updateMotors(); 
   Serial.flush(); // Sittin' on the toilet!
   checkForMessage();
+  if (running){ //if running state is set to true
+    checkHalls();
+  }
 }
