@@ -5,7 +5,7 @@ import serial
 
 import core
 
-serial = serial.Serial("/dev/ttyUSB0",9600)
+serial = serial.Serial("/dev/ttyUSB0",9600,timeout=1)
 
 #default values for mainhub class
 default_values = {}
@@ -154,12 +154,18 @@ class Director(core.Core):
 
 	def decode_package(self, packet):
 		pod_packet = {}
-		
+		'''
 		try:
 			packet = bin(int(packet,10))[2:].zfill(32)
 		except:
 			self.logger("Possible Error, retransmitting package")
-			self.decode_package(self.recieve_message())
+			try:
+				read_message = self.recieve_message()
+			except Exception, e:
+				print(e)
+			self.decode_package(read_message)
+		'''
+		packet = bin(int(packet, 10))[2:].zfill(32)
 		
 		#parsed_message = bin(int(parsed_message))
 		
@@ -170,11 +176,46 @@ class Director(core.Core):
 
 		return pod_packet
 
-	def check_package(self, package):
-		confirm_package = self.decode_package(self.recieve_message())
+	def check_package(self, package, status=None, count = None):
+		#read_message = ''
+		#test
+		time.sleep(4)
+		read_message = serial.read(serial.inWaiting())
+		if read_message == '':
+			orig_time = time.time()
+			while((time.time()-orig_time)<6):
+				if read_message == '':
+					print("read again")
+					time.sleep(2)
+					read_message = serial.read(serial.inWaiting())
+				else:
+					break
+			if read_message == '':
+				while (count != None) and (count < 2):
+					count = count + 1
+					print("resend")
+					#rebreak the package
+					resend = self.decode_package(package)
+					#transmit and repackage
+					repackage = self.transmit_package(resend['reciever'], resend['data_type'], resend['payload'])
+					try:
+						self.check_package(package, None, count)
+					except:
+						pass
+				else:
+					print("reinput")
+					raise Exception("boo")
+		#orig_time = time.time()
+		#while((read_message == '') & ((orig_time-time.time())<5)):
+		#	read_message = self.recieve_message()
+		#if read_message == '':
+		#	raise "Problem in sending"
+		confirm_package = self.decode_package(read_message)
 		original_package = self.decode_package(package)
 		if confirm_package['sender'] != original_package['reciever']:
 			print("Error in Sender INIT Path")
+		else:
+			print("Sender Match")
 		if original_package['data_type'] == '0000':
 			if confirm_package['data_type'] != '0001':
 				print("Error in Data Type INIT Path")
@@ -183,13 +224,23 @@ class Director(core.Core):
 			else:
 				print("Go INIT Path")
 				package = self.transmit_package(original_package['reciever'], '0010', '')
+				#try:
 				self.check_package(package)
+				#except:
+				#	pass
 		elif original_package['data_type'] == '0010':
 			if confirm_package['data_type'] != '0011':
 				print("Error in Data Type Confirm Path")
 			else:
 				print ("Go Confirm Path")
-
+		elif original_package['data_type'] == '0100':
+			if confirm_package['data_type'] != '0101':
+				print("Error in Data Type Status")
+			else:
+				if confirm_package['payload'] == '0'.zfill(24):
+					print("Changing Run Status")
+					status(False)
+				
 	def transmit_package(self, reciever = '01', transmission_type='0000',payload=''):
 		'''
 		00 mainhub
@@ -202,7 +253,6 @@ class Director(core.Core):
 		0100 Request status
 		1111 Emergency stop 
 		'''
-		#reciever = self.get_pod(
 		sender = '00'
 
 		package = str(int(str(reciever) + str(sender) + str(transmission_type) + str(payload.ljust(24,'0')),2))
@@ -212,8 +262,21 @@ class Director(core.Core):
 
 
 	def recieve_message(self):
+		readMsg = ''
 		serial.flushInput()
 		time.sleep(4)
-		readMsg = serial.read(serial.inWaiting())
+		orig_time = time.time()
+		while((time.time()-orig_time) < 5 ):
+			readMsg = serial.read(serial.inWaiting())
+			#print("test")
+			time.sleep(1)
+			if readMsg != '':
+				break
+			else:
+				raise("problem in recieving message")
 		self.logger("Recieving package %s" % readMsg)
 		return readMsg
+	
+	def get_run(self, run):
+		return run
+		

@@ -70,7 +70,16 @@ class Main(object):
 			if self.queue.empty():
 				print("Current State: REPORT")
 				for elem in self.pod_list:
-					elem.report()
+					if elem.get_run() == True:
+						print ("derp")
+						package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0100', '')
+						try:
+							self.director.check_package(package, elem.set_run)
+							elem.set_source(elem.get_destination())
+						except:
+							pass
+					else:
+						elem.report()
 			else:
 				current = self.queue.get()
 				if "system_close" in current:
@@ -90,8 +99,12 @@ class Main(object):
 							elem.logger(directions)
 							self.parse_directions(directions)
 							package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0000', self.map.ljust(24,'0'))
-							self.director.check_package(package)
-							directions = ""
+							#Broken ASS code (A.rtifical S.upport S.ystem)
+							try:
+								self.director.check_package(package)
+							except:
+								print("Invalid")
+								elem.set_run(False)
 							break
 
 	def test(self):
