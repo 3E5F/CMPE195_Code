@@ -27,6 +27,7 @@ class Main(object):
 		self.set = False
 		self.pod_list = []
 		self.director = None
+		self.map = ''
 
 
 	def gui_start(self):
@@ -44,8 +45,7 @@ class Main(object):
 
 	def push_queue(self):
 		self.queue.put((self.ex.source, self.ex.destination))
-		print("%s\tCoordinates Pushed" % datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'))
-		#print "Coordinates Pushed"
+		print "Test"
 
 
 	def close_system(self):
@@ -61,27 +61,25 @@ class Main(object):
 
 
 	def main_hub(self):
-		self.director = mainhub.Director(4)
+		self.director = mainhub.Director(3)
 
 		for elem in range(self.director.get_pod()):
 			self.pod_list.append(pod.Pod(elem))
 
 		while(True):
 			if self.queue.empty():
-				print("%s\tCurrent State: REPORT" % datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'))
+				print("Current State: REPORT")
 				for elem in self.pod_list:
 					elem.report()
 			else:
-
 				current = self.queue.get()
 				if "system_close" in current:
-					print("%s\tCurrent State: SHUTDOWN" % datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'))
+					print("Current State: SHUTDOWN")
 					self.shutdown()
-				elif not(None in current):
-					print("%s\tCurrent State: DIRECTOR" % datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'))
+				else:
+					print("Current State: DIRECTOR")
 					(source, destination) = current
-					#print("%s-%s" % (source, destination))
-					print("%s\t%s-%s" % (datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'), source, destination))
+					print("%s-%s" % (source, destination))
 					self.director.set_source(source)
 					self.director.set_destination(destination)
 					self.director.get_path()
@@ -90,15 +88,11 @@ class Main(object):
 							directions = self.director.translate_path()
 							elem.set_run(True)
 							elem.logger(directions)
+							self.parse_directions(directions)
+							package = self.director.transmit_package(bin(elem.get_id()+1)[2:].zfill(2), '0000', self.map.ljust(24,'0'))
+							self.director.check_package(package)
+							directions = ""
 							break
-
-			#TEST
-			for elem in self.pod_list:
-				if elem.get_run() == True and elem.counter > 0:
-					elem.counter -= 1
-				elif elem.counter == 0:
-					elem.set(pod_location=destination)
-					elem.finish_run()
 
 	def test(self):
 		self.p1 = Process(target=self.main_hub)
@@ -106,6 +100,11 @@ class Main(object):
 		self.p1.start()
 		time.sleep(3)
 		self.p2.start()
+
+	def parse_directions(self, directions):
+		for elem in directions:
+			for count in elem:
+				self.map = self.map + count
 
 
 if __name__ == '__main__':
