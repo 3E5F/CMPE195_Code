@@ -89,7 +89,7 @@ class Main(object):
 							elem.set_run(True)
 							elem.logger(directions)
 							self.parse_directions(directions)
-							package = self.director.transmit_package(bin(elem.get_id()+1)[2:].zfill(2), '0000', self.map.ljust(24,'0'))
+							package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0000', self.map.ljust(24,'0'))
 							self.director.check_package(package)
 							directions = ""
 							break

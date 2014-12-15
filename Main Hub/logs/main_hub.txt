@@ -1,0 +1,16 @@
+12/14/14-20:07:05	---INITIALIZING MAINHUB DIRECTOR SYSTEM---
+
+12/14/14-20:07:14	Start traveling from station 1
+12/14/14-20:07:14	Moving from station 1 to station 2
+12/14/14-20:07:14	Moving from station 2 to station 3
+12/14/14-20:07:14	Moving from station 3 to station 4
+12/14/14-20:07:14	You have arrived at your destination.
+
+12/14/14-20:07:14	Path to motor function: [['11'], ['11'], ['11']]
+
+12/14/14-20:07:14	Transmitting package 1090256896
+12/14/14-20:07:18	Recieving package 301727744
+12/14/14-20:07:18	Transmitting package 1107296256
+12/14/14-20:07:22	Recieving package 335282176
+12/14/14-20:11:17	---SHUTING DOWN MAINHUB DIRECTOR SYSTEM---
+

@@ -156,7 +156,7 @@ class Director(core.Core):
 		pod_packet = {}
 		
 		try:
-			packet = bin(int(packet,10))[2:].ljust(32,'0')
+			packet = bin(int(packet,10))[2:].zfill(32)
 		except:
 			self.logger("Possible Error, retransmitting package")
 			self.decode_package(self.recieve_message())
@@ -168,7 +168,7 @@ class Director(core.Core):
 		pod_packet['data_type'] = packet[4:8]
 		pod_packet['payload'] = packet[8:]
 
-		return packet
+		return pod_packet
 
 	def check_package(self, package):
 		confirm_package = self.decode_package(self.recieve_message())
@@ -178,14 +178,16 @@ class Director(core.Core):
 		if original_package['data_type'] == '0000':
 			if confirm_package['data_type'] != '0001':
 				print("Error in Data Type INIT Path")
-			elif confirm_package['payload'] != original_package['payload']
+			elif confirm_package['payload'] != original_package['payload']:
 				print("Error in Payload INIT Path")
-			else
+			else:
 				print("Go INIT Path")
+				package = self.transmit_package(original_package['reciever'], '0010', '')
+				self.check_package(package)
 		elif original_package['data_type'] == '0010':
 			if confirm_package['data_type'] != '0011':
 				print("Error in Data Type Confirm Path")
-			else
+			else:
 				print ("Go Confirm Path")
 
 	def transmit_package(self, reciever = '01', transmission_type='0000',payload=''):
