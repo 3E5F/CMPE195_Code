@@ -13,6 +13,7 @@ default_values['log_directory'] = os.path.join(default_values['working_directory
 default_values['direction_content'] = {'station_1':{'station_2':('0x00', 20), 'station_4':('0x10', 40)}, 'station_2':{'station_3':('0x00',20)}, 'station_3':{'station_1':('0x10',40), 'station_4':('0x00',20)}, 'station_4':{'station_2':('0x10',40),'station_5':('0x00',20)}, 'station_5':{'station_1':('0x00',20), 'station_3':('0x10',40)}}
 default_values['direction_directory'] = os.path.join(default_values['working_directory'], "direction.plist")
 
+
 class Core(object):
 	'''
 	core class that all classes should import
@@ -28,6 +29,7 @@ class Core(object):
 		#if folder does not exist, create it
 		if not(os.path.exists(os.path.dirname(directory))):
 			os.makedirs(os.path.dirname(directory))
+
 
 	def remove_directory(self, directory):
 		'''

@@ -8,6 +8,7 @@ default_values = {}
 default_values['working_directory'] = os.path.dirname(os.path.realpath(__file__))
 default_values['log_directory'] = os.path.join(default_values['working_directory'],"logs/GUI.txt")
 default_values['admin_password'] = "0195"
+default_values['image_directory'] = os.path.join(default_values['working_directory'], "images/map.jpg")
 
 class GUI(QtGui.QWidget, core.Core):
     confirm_signal = QtCore.Signal()
@@ -125,6 +126,14 @@ class GUI(QtGui.QWidget, core.Core):
         self.line.setStyleSheet("")
         self.line.setFrameShape(QtGui.QFrame.HLine)
         self.line.setObjectName("line")
+
+#images
+        self.image = QtGui.QLabel(self.central_widget)
+        self.image.setGeometry(QtCore.QRect(340,75,230,200))
+        self.image.setPixmap(QtGui.QPixmap(default_values['image_directory']))
+        self.image.setObjectName("map")
+
+        
 
 #CONNECTORS
         #source stations

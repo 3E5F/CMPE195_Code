@@ -44,7 +44,8 @@ class Main(object):
 
 	def push_queue(self):
 		self.queue.put((self.ex.source, self.ex.destination))
-		print "Test"
+		print("%s\tCoordinates Pushed" % datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'))
+		#print "Coordinates Pushed"
 
 
 	def close_system(self):
@@ -67,18 +68,20 @@ class Main(object):
 
 		while(True):
 			if self.queue.empty():
-				print("Current State: REPORT")
+				print("%s\tCurrent State: REPORT" % datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'))
 				for elem in self.pod_list:
 					elem.report()
 			else:
+
 				current = self.queue.get()
 				if "system_close" in current:
-					print("Current State: SHUTDOWN")
+					print("%s\tCurrent State: SHUTDOWN" % datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'))
 					self.shutdown()
-				else:
-					print("Current State: DIRECTOR")
+				elif not(None in current):
+					print("%s\tCurrent State: DIRECTOR" % datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'))
 					(source, destination) = current
-					print("%s-%s" % (source, destination))
+					#print("%s-%s" % (source, destination))
+					print("%s\t%s-%s" % (datetime.datetime.fromtimestamp(time.time()).strftime('%m/%d/%y-%H:%M:%S'), source, destination))
 					self.director.set_source(source)
 					self.director.set_destination(destination)
 					self.director.get_path()
@@ -87,8 +90,16 @@ class Main(object):
 							directions = self.director.translate_path()
 							elem.set_run(True)
 							elem.logger(directions)
-							directions = ""
 							break
+
+			#TEST
+			for elem in self.pod_list:
+				if elem.get_run() == True and elem.counter > 0:
+					elem.counter -= 1
+				elif elem.counter == 0:
+					elem.set(pod_location=destination)
+					elem.finish_run()
+
 	def test(self):
 		self.p1 = Process(target=self.main_hub)
 		self.p2 = Process(target=self.gui_start)

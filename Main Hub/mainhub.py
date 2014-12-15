@@ -1,8 +1,11 @@
 import os
 import plistlib
 import time
+import serial
 
 import core
+
+serial = serial.Serial("/dev/ttyUSB0",9600)
 
 #default values for mainhub class
 default_values = {}
@@ -69,8 +72,10 @@ class Director(core.Core):
 		#lowercase, replace " " with "_", user input for source
 		self.source = raw_input("Where would you like to start: ").replace(" ", "_").lower()
 
+
 	def set_source(self, source):
 		self.source = source
+
 
 	def set_destination(self, destination):
 		self.destination = destination
@@ -115,6 +120,7 @@ class Director(core.Core):
 			self.send_commands.append(self.decode_direction(elem))
 		#write to log
 		self.logger("Path to motor function: %s\n" % self.send_commands)
+		self.directions = []
 
 		return self.send_commands
 		#elem.logger("Path to motor function: %s\n" % self.send_commands)
@@ -143,3 +149,69 @@ class Director(core.Core):
 
 	def get_source(self):
 		return self.source
+
+	#Move pod to person
+
+	def decode_package(self, packet):
+		pod_packet = {}
+		
+		try:
+			packet = bin(int(packet,10))[2:].ljust(32,'0')
+		except:
+			self.logger("Possible Error, retransmitting package")
+			self.decode_package(self.recieve_message())
+		
+		#parsed_message = bin(int(parsed_message))
+		
+		pod_packet['reciever'] = packet[0:2]
+		pod_packet['sender'] = packet[2:4]
+		pod_packet['data_type'] = packet[4:8]
+		pod_packet['payload'] = packet[8:]
+
+		return packet
+
+	def check_package(self, package):
+		confirm_package = self.decode_package(self.recieve_message())
+		original_package = self.decode_package(package)
+		if confirm_package['sender'] != original_package['reciever']:
+			print("Error in Sender INIT Path")
+		if original_package['data_type'] == '0000':
+			if confirm_package['data_type'] != '0001':
+				print("Error in Data Type INIT Path")
+			elif confirm_package['payload'] != original_package['payload']
+				print("Error in Payload INIT Path")
+			else
+				print("Go INIT Path")
+		elif original_package['data_type'] == '0010':
+			if confirm_package['data_type'] != '0011':
+				print("Error in Data Type Confirm Path")
+			else
+				print ("Go Confirm Path")
+
+	def transmit_package(self, reciever = '01', transmission_type='0000',payload=''):
+		'''
+		00 mainhub
+		01 pod 1
+		10 pod 2
+		11 pod 3
+
+		0000 init path message
+		0010 go path message
+		0100 Request status
+		1111 Emergency stop 
+		'''
+		#reciever = self.get_pod(
+		sender = '00'
+
+		package = str(int(str(reciever) + str(sender) + str(transmission_type) + str(payload.ljust(24,'0')),2))
+		self.logger("Transmitting package %s" % package)
+		serial.write(package)
+		return package
+
+
+	def recieve_message(self):
+		serial.flushInput()
+		time.sleep(4)
+		readMsg = serial.read(serial.inWaiting())
+		self.logger("Recieving package %s" % readMsg)
+		return readMsg
