@@ -76,7 +76,7 @@ class Main(object):
 					self.available = False
 					print("All pods are in use")
 					
-			if (self.queue.empty()) or ((self.queue.empty() == False) and (available == False)):
+			if (self.queue.empty()) or ((self.queue.empty() == False) and (self.available == False)):
 				print("Current State: REPORT")
 				for elem in self.pod_list:
 					if elem.get_run() == True:
@@ -89,7 +89,7 @@ class Main(object):
 					else:
 						elem.report()
 			else:
-				if (available == True):
+				if (self.available == True):
 					current = self.queue.get()
 					if "system_close" in current:
 						print("Current State: SHUTDOWN")
