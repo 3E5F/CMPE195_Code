@@ -28,6 +28,7 @@ class Main(object):
 		self.pod_list = []
 		self.director = None
 		self.map = ''
+		self.available = False
 
 
 	def gui_start(self):
@@ -61,17 +62,24 @@ class Main(object):
 
 
 	def main_hub(self):
-		self.director = mainhub.Director(3)
+		self.director = mainhub.Director(2)
 
 		for elem in range(self.director.get_pod()):
 			self.pod_list.append(pod.Pod(elem))
 
 		while(True):
-			if self.queue.empty():
+			for elem in pod_list:
+				if elem.get_run() == False:
+					self.available = True
+					break
+				else:
+					self.available = False
+					print("All pods are in use")
+					
+			if (self.queue.empty()) or ((self.queue.empty() == False) and (available == False)):
 				print("Current State: REPORT")
 				for elem in self.pod_list:
 					if elem.get_run() == True:
-						print ("derp")
 						package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0100', '')
 						try:
 							self.director.check_package(package, elem.set_run)
@@ -81,31 +89,32 @@ class Main(object):
 					else:
 						elem.report()
 			else:
-				current = self.queue.get()
-				if "system_close" in current:
-					print("Current State: SHUTDOWN")
-					self.shutdown()
-				else:
-					print("Current State: DIRECTOR")
-					(source, destination) = current
-					print("%s-%s" % (source, destination))
-					self.director.set_source(source)
-					self.director.set_destination(destination)
-					self.director.get_path()
-					for elem in self.pod_list:
-						if elem.get_run() == False:
-							directions = self.director.translate_path()
-							elem.set_run(True)
-							elem.logger(directions)
-							self.parse_directions(directions)
-							package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0000', self.map.ljust(24,'0'))
-							#Broken ASS code (A.rtifical S.upport S.ystem)
-							try:
-								self.director.check_package(package)
-							except:
-								print("Invalid")
-								elem.set_run(False)
-							break
+				if (available == True):
+					current = self.queue.get()
+					if "system_close" in current:
+						print("Current State: SHUTDOWN")
+						self.shutdown()
+					else:
+						print("Current State: DIRECTOR")
+						(source, destination) = current
+						print("%s-%s" % (source, destination))
+						self.director.set_source(source)
+						self.director.set_destination(destination)
+						self.director.get_path()
+						for elem in self.pod_list:
+							if elem.get_run() == False:
+								directions = self.director.translate_path()
+								elem.set_run(True)
+								elem.logger(directions)
+								self.parse_directions(directions)
+								package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0000', self.map.ljust(24,'0'))
+								#Broken ASS code (A.rtifical S.upport S.ystem)
+								try:
+									self.director.check_package(package)
+								except:
+									print("Invalid")
+									elem.set_run(False)
+								break
 
 	def test(self):
 		self.p1 = Process(target=self.main_hub)
