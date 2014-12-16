@@ -68,7 +68,7 @@ class Main(object):
 			self.pod_list.append(pod.Pod(elem))
 
 		while(True):
-			for elem in pod_list:
+			for elem in self.pod_list:
 				if elem.get_run() == False:
 					self.available = True
 					break
@@ -102,7 +102,7 @@ class Main(object):
 						self.director.set_destination(destination)
 						self.director.get_path()
 						for elem in self.pod_list:
-							if elem.get_run() == False:
+							if elem.get_run() == False and elem.get_location == source:
 								directions = self.director.translate_path()
 								elem.set_run(True)
 								elem.logger(directions)
@@ -115,6 +115,23 @@ class Main(object):
 									print("Invalid")
 									elem.set_run(False)
 								break
+							elif elem.get_run() == False and elem.get_location != source:
+								self.director.set_source = elem.get_location
+								self.director.set_destination = source
+								self.queue.put(current)
+								directions = self.director.translate_path()
+								elem.set_run(True)
+								elem.logger(directions)
+								self.parse_directions(directions)
+								package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0000', self.map.ljust(24,'0'))
+								#Broken ASS code (A.rtifical S.upport S.ystem)
+								try:
+									self.director.check_package(package)
+								except:
+									print("Invalid")
+									elem.set_run(False)
+								break
+								
 
 	def test(self):
 		self.p1 = Process(target=self.main_hub)
