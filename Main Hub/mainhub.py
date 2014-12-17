@@ -12,7 +12,7 @@ default_values = {}
 default_values['working_directory'] = os.path.dirname(os.path.realpath(__file__))
 default_values['graph_directory'] = os.path.join(default_values['working_directory'], "graph.plist")
 default_values['plist_error'] = "No such file or directory"
-default_values['graph_content'] = {'station_1':[0,2,0,4,0], 'station_2':[0,0,2,0,0], 'station_3':[4,0,0,2,0], 'station_4':[0,4,0,0,2], 'station_5':[2,0,4,0,0]}
+default_values['graph_gecontent'] = {'station_1':[0,2,0,4,0], 'station_2':[0,0,2,0,0], 'station_3':[4,0,0,2,0], 'station_4':[0,4,0,0,2], 'station_5':[2,0,4,0,0]}
 default_values['log_directory'] = os.path.join(default_values['working_directory'],"logs/main_hub.txt")
 default_values['direction_content'] = {'station_1':{'station_2':('0x00', 20), 'station_4':('0x10', 40)}, 'station_2':{'station_3':('0x00',20)}, 'station_3':{'station_1':('0x10',40), 'station_4':('0x00',20)}, 'station_4':{'station_2':('0x10',40),'station_5':('0x00',20)}, 'station_5':{'station_1':('0x00',20), 'station_3':('0x10',40)}}
 default_values['direction_directory'] = os.path.join(default_values['working_directory'], "direction.plist")
@@ -40,7 +40,7 @@ class Director(core.Core):
 		self.logger("---INITIALIZING MAINHUB DIRECTOR SYSTEM---\n")
 
 		#import plists
-		self.graph = self.import_plist(default_values['graph_directory'], default_values['graph_content'])
+		#self.graph = self.import_plist(default_values['graph_directory'], default_values['graph_content'])
 		self.direction = self.import_plist(default_values['direction_directory'], default_values['direction_content'])
 		#self.init_pods()
 
@@ -90,8 +90,11 @@ class Director(core.Core):
 
 
 	def get_path(self):
+		return self.direction[self.source][self.destination]
+		
 		'''
 		Function provides graphing algorithm
+		'''
 		'''
 		#set current node to the beginning
 		current_node = self.source
@@ -108,8 +111,12 @@ class Director(core.Core):
 				
 		#write to log
 		self.logger("You have arrived at your destination.\n")
-
-
+		'''
+	
+	def reset_path(self):
+		self.directions = []
+		self.send_commands = []
+		
 	def translate_path(self):
 		'''
 		Functions translates the station to station directions to motor
@@ -191,7 +198,7 @@ class Director(core.Core):
 				else:
 					break
 			if read_message == '':
-				while (count != None) and (count < 2):
+				while (count != None) and (count < 3):
 					count = count + 1
 					print("resend")
 					#rebreak the package
@@ -203,7 +210,6 @@ class Director(core.Core):
 					except:
 						pass
 				else:
-					print("reinput")
 					raise Exception("boo")
 		#orig_time = time.time()
 		#while((read_message == '') & ((orig_time-time.time())<5)):

@@ -100,30 +100,33 @@ class Main(object):
 						print("%s-%s" % (source, destination))
 						self.director.set_source(source)
 						self.director.set_destination(destination)
-						self.director.get_path()
+						directions = self.director.get_path()
 						for elem in self.pod_list:
-							if elem.get_run() == False and elem.get_location == source:
-								directions = self.director.translate_path()
+							if elem.get_run() == False and elem.get_location() == source:
+								#directions = self.director.translate_path()
+								self.director.reset_path()
 								elem.set_run(True)
-								elem.logger(directions)
+								#elem.logger(directions)
 								self.parse_directions(directions)
 								package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0000', self.map.ljust(24,'0'))
+								self.map = ''
 								#Broken ASS code (A.rtifical S.upport S.ystem)
 								try:
 									self.director.check_package(package)
 								except:
-									print("Invalid")
+									print("Error in transmission")
 									elem.set_run(False)
 								break
-							elif elem.get_run() == False and elem.get_location != source:
-								self.director.set_source = elem.get_location
-								self.director.set_destination = source
+							if elem.get_run() == False and elem.get_location() != source:
+								self.director.set_source(elem.get_location())
+								self.director.set_destination(source)
 								self.queue.put(current)
 								directions = self.director.translate_path()
 								elem.set_run(True)
 								elem.logger(directions)
 								self.parse_directions(directions)
 								package = self.director.transmit_package(str(bin(elem.get_id()+1)[2:].zfill(2)), '0000', self.map.ljust(24,'0'))
+								self.map = ''
 								#Broken ASS code (A.rtifical S.upport S.ystem)
 								try:
 									self.director.check_package(package)
@@ -142,8 +145,7 @@ class Main(object):
 
 	def parse_directions(self, directions):
 		for elem in directions:
-			for count in elem:
-				self.map = self.map + count
+			self.map = self.map + elem
 
 
 if __name__ == '__main__':

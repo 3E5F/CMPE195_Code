@@ -10,7 +10,7 @@ class Pod(core.Core):
 	def __init__(self, pod_id):
 		self.id = pod_id
 		self.run = False
-		self.location = "Station_1"
+		self.location = "station_1"
 		self.speed = 0
 		self.proximity = 0
 

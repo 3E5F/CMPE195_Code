@@ -41,27 +41,27 @@ class GUI(QtGui.QWidget, core.Core):
         self.welcome_text = QtGui.QLabel(self.central_widget)
         self.welcome_text.setGeometry(QtCore.QRect(68, 0, 464, 50))
         self.welcome_text.setObjectName("welcome_text")
-        self.welcome_text.setStyleSheet("font: 30pt;")
+        self.welcome_text.setStyleSheet("font: 18pt;")
 
         self.source_text = QtGui.QLabel(self.central_widget)
         self.source_text.setGeometry(QtCore.QRect(30, 50, 300, 50))
         self.source_text.setObjectName("source_text")
-        self.source_text.setStyleSheet("font: 18pt;")
+        self.source_text.setStyleSheet("font: 12pt;")
 
         self.destination_text = QtGui.QLabel(self.central_widget)
         self.destination_text.setGeometry(QtCore.QRect(30, 175, 300, 50))
         self.destination_text.setObjectName("destination_text")
-        self.destination_text.setStyleSheet("font: 18pt;")
+        self.destination_text.setStyleSheet("font: 12pt;")
 
         self.current_source_text = QtGui.QLabel(self.central_widget)
         self.current_source_text.setGeometry(QtCore.QRect(45,310, 350, 50))
         self.current_source_text.setObjectName("current_source_text")
-        self.current_source_text.setStyleSheet("font: 18pt;")
+        self.current_source_text.setStyleSheet("font: 12pt;")
 
         self.current_destination_text = QtGui.QLabel(self.central_widget)
         self.current_destination_text.setGeometry(QtCore.QRect(45, 350, 350, 50))
         self.current_destination_text.setObjectName("current_destination_text")
-        self.current_destination_text.setStyleSheet("font: 18pt;")
+        self.current_destination_text.setStyleSheet("font: 12pt;")
 
 #BUTTONS
         self.source_station_1_button = QtGui.QPushButton(self.central_widget)
@@ -76,17 +76,17 @@ class GUI(QtGui.QWidget, core.Core):
         self.source_station_3_button.setGeometry(QtCore.QRect(210, 100, 80, 20))
         self.source_station_3_button.setObjectName("source_station_3_button")
 
-        self.source_station_4_button = QtGui.QPushButton(self.central_widget)
-        self.source_station_4_button.setGeometry(QtCore.QRect(30, 130, 80, 20))
-        self.source_station_4_button.setObjectName("source_station_4_button")
+        #self.source_station_4_button = QtGui.QPushButton(self.central_widget)
+        #self.source_station_4_button.setGeometry(QtCore.QRect(30, 130, 80, 20))
+        #self.source_station_4_button.setObjectName("source_station_4_button")
 
-        self.source_station_5_button = QtGui.QPushButton(self.central_widget)
-        self.source_station_5_button.setGeometry(QtCore.QRect(120, 130, 80, 20))
-        self.source_station_5_button.setObjectName("source_station_5_button")
+        #self.source_station_5_button = QtGui.QPushButton(self.central_widget)
+        #self.source_station_5_button.setGeometry(QtCore.QRect(120, 130, 80, 20))
+        #self.source_station_5_button.setObjectName("source_station_5_button")
 
-        self.source_station_6_button = QtGui.QPushButton(self.central_widget)
-        self.source_station_6_button.setGeometry(QtCore.QRect(210, 130, 80, 20))
-        self.source_station_6_button.setObjectName("source_station_6_button")
+        #self.source_station_6_button = QtGui.QPushButton(self.central_widget)
+        #self.source_station_6_button.setGeometry(QtCore.QRect(210, 130, 80, 20))
+        #self.source_station_6_button.setObjectName("source_station_6_button")
 
         self.destination_station_1_button = QtGui.QPushButton(self.central_widget)
         self.destination_station_1_button.setGeometry(QtCore.QRect(30, 225, 80, 20))
@@ -100,17 +100,17 @@ class GUI(QtGui.QWidget, core.Core):
         self.destination_station_3_button.setGeometry(QtCore.QRect(210, 225, 80, 20))
         self.destination_station_3_button.setObjectName("destination_station_3_button")
 
-        self.destination_station_4_button = QtGui.QPushButton(self.central_widget)
-        self.destination_station_4_button.setGeometry(QtCore.QRect(30, 255, 80, 20))
-        self.destination_station_4_button.setObjectName("destination_station_4_button")
+        #self.destination_station_4_button = QtGui.QPushButton(self.central_widget)
+        #self.destination_station_4_button.setGeometry(QtCore.QRect(30, 255, 80, 20))
+        #self.destination_station_4_button.setObjectName("destination_station_4_button")
 
-        self.destination_station_5_button = QtGui.QPushButton(self.central_widget)
-        self.destination_station_5_button.setGeometry(QtCore.QRect(120, 255, 80, 20))
-        self.destination_station_5_button.setObjectName("destination_station_5_button")
+        #self.destination_station_5_button = QtGui.QPushButton(self.central_widget)
+        #self.destination_station_5_button.setGeometry(QtCore.QRect(120, 255, 80, 20))
+        #self.destination_station_5_button.setObjectName("destination_station_5_button")
 
-        self.destination_station_6_button = QtGui.QPushButton(self.central_widget)
-        self.destination_station_6_button.setGeometry(QtCore.QRect(210, 255, 80, 20))
-        self.destination_station_6_button.setObjectName("destination_station_6_button")
+        #self.destination_station_6_button = QtGui.QPushButton(self.central_widget)
+        #self.destination_station_6_button.setGeometry(QtCore.QRect(210, 255, 80, 20))
+        #self.destination_station_6_button.setObjectName("destination_station_6_button")
 
         self.confirm_button= QtGui.QPushButton(self.central_widget)
         self.confirm_button.setGeometry(QtCore.QRect(380, 320, 100, 75))
@@ -140,17 +140,17 @@ class GUI(QtGui.QWidget, core.Core):
         self.source_station_1_button.clicked.connect(self.source_station_1)
         self.source_station_2_button.clicked.connect(self.source_station_2)
         self.source_station_3_button.clicked.connect(self.source_station_3)
-        self.source_station_4_button.clicked.connect(self.source_station_4)
-        self.source_station_5_button.clicked.connect(self.source_station_5)
-        self.source_station_6_button.clicked.connect(self.source_station_6)
+        #self.source_station_4_button.clicked.connect(self.source_station_4)
+        #self.source_station_5_button.clicked.connect(self.source_station_5)
+        #self.source_station_6_button.clicked.connect(self.source_station_6)
 
         #destination stations
         self.destination_station_1_button.clicked.connect(self.destination_station_1)
         self.destination_station_2_button.clicked.connect(self.destination_station_2)
         self.destination_station_3_button.clicked.connect(self.destination_station_3)
-        self.destination_station_4_button.clicked.connect(self.destination_station_4)
-        self.destination_station_5_button.clicked.connect(self.destination_station_5)
-        self.destination_station_6_button.clicked.connect(self.destination_station_6)
+        #self.destination_station_4_button.clicked.connect(self.destination_station_4)
+        #self.destination_station_5_button.clicked.connect(self.destination_station_5)
+        #self.destination_station_6_button.clicked.connect(self.destination_station_6)
 
         #cancel/confirm 
         self.cancel_button.clicked.connect(self.cancel_press)
@@ -221,7 +221,7 @@ class GUI(QtGui.QWidget, core.Core):
 
 
     def update_source(self):
-        self.current_source_text.setText('Start destination: \t\t'+self.source.capitalize().replace("_"," "))
+        self.current_source_text.setText('Start destination: \t'+self.source.capitalize().replace("_"," "))
 
 
     def update_destination(self):
@@ -234,21 +234,21 @@ class GUI(QtGui.QWidget, core.Core):
         self.welcome_text.setText(QtGui.QApplication.translate("main_window", "Welcome to the Spartan Superway", None, QtGui.QApplication.UnicodeUTF8))
         self.source_text.setText(QtGui.QApplication.translate("main_window", "Please select your source station:", None, QtGui.QApplication.UnicodeUTF8))
         self.destination_text.setText(QtGui.QApplication.translate("main_window", "Please select your destination station:", None, QtGui.QApplication.UnicodeUTF8))
-        self.current_source_text.setText(QtGui.QApplication.translate("main_window", "Start destination: \t\tNot selected", None, QtGui.QApplication.UnicodeUTF8))
+        self.current_source_text.setText(QtGui.QApplication.translate("main_window", "Start destination: \tNot selected", None, QtGui.QApplication.UnicodeUTF8))
         self.current_destination_text.setText(QtGui.QApplication.translate("main_window", "Desired destination: \tNot selected", None, QtGui.QApplication.UnicodeUTF8))
         
         self.source_station_1_button.setText(QtGui.QApplication.translate("main_window", "Station 1", None, QtGui.QApplication.UnicodeUTF8))
         self.source_station_2_button.setText(QtGui.QApplication.translate("main_window", "Station 2", None, QtGui.QApplication.UnicodeUTF8))
         self.source_station_3_button.setText(QtGui.QApplication.translate("main_window", "Station 3", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_4_button.setText(QtGui.QApplication.translate("main_window", "Station 4", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_5_button.setText(QtGui.QApplication.translate("main_window", "Station 5", None, QtGui.QApplication.UnicodeUTF8))
-        self.source_station_6_button.setText(QtGui.QApplication.translate("main_window", "Station 6", None, QtGui.QApplication.UnicodeUTF8))
+        #self.source_station_4_button.setText(QtGui.QApplication.translate("main_window", "Station 4", None, QtGui.QApplication.UnicodeUTF8))
+        #self.source_station_5_button.setText(QtGui.QApplication.translate("main_window", "Station 5", None, QtGui.QApplication.UnicodeUTF8))
+        #self.source_station_6_button.setText(QtGui.QApplication.translate("main_window", "Station 6", None, QtGui.QApplication.UnicodeUTF8))
         self.destination_station_1_button.setText(QtGui.QApplication.translate("main_window", "Station 1", None, QtGui.QApplication.UnicodeUTF8))
         self.destination_station_2_button.setText(QtGui.QApplication.translate("main_window", "Station 2", None, QtGui.QApplication.UnicodeUTF8))
         self.destination_station_3_button.setText(QtGui.QApplication.translate("main_window", "Station 3", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_4_button.setText(QtGui.QApplication.translate("main_window", "Station 4", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_5_button.setText(QtGui.QApplication.translate("main_window", "Station 5", None, QtGui.QApplication.UnicodeUTF8))
-        self.destination_station_6_button.setText(QtGui.QApplication.translate("main_window", "Station 6", None, QtGui.QApplication.UnicodeUTF8))
+        #self.destination_station_4_button.setText(QtGui.QApplication.translate("main_window", "Station 4", None, QtGui.QApplication.UnicodeUTF8))
+        #self.destination_station_5_button.setText(QtGui.QApplication.translate("main_window", "Station 5", None, QtGui.QApplication.UnicodeUTF8))
+        #self.destination_station_6_button.setText(QtGui.QApplication.translate("main_window", "Station 6", None, QtGui.QApplication.UnicodeUTF8))
         self.confirm_button.setText(QtGui.QApplication.translate("main_window", "Confirm\nSelection", None, QtGui.QApplication.UnicodeUTF8))
         self.cancel_button.setText(QtGui.QApplication.translate("main_window", "Cancel\nSelection", None, QtGui.QApplication.UnicodeUTF8))
 
@@ -288,10 +288,10 @@ class GUI(QtGui.QWidget, core.Core):
         self.admin_window.instruction_text = QtGui.QLabel(self.admin_window)
         self.admin_window.instruction_text.setGeometry(QtCore.QRect(10, 80, 150, 150))
         self.admin_window.instruction_text.setObjectName("instruction_text")
-        self.admin_window.instruction_text.setStyleSheet("font: 30pt;")
+        self.admin_window.instruction_text.setStyleSheet("font: 20pt;")
 
         self.admin_window.code_text = QtGui.QLineEdit(self.admin_window)
-        self.admin_window.code_text.setStyleSheet("font: 30pt;")
+        self.admin_window.code_text.setStyleSheet("font: 20pt;")
         self.admin_window.code_text.setGeometry(QtCore.QRect(15, 30, 150, 50))
         
 #BUTTONS
